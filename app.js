@@ -27,12 +27,18 @@ const initializeDBAndServer = async () => {
 
 initializeDBAndServer()
 
-const convertMovieObjectToResponseObject = dbObject => {
+const convertMovieObjectToResponseObject = each => {
   return {
-    movieId: dbObject.movie_id,
+    movieId: each.movie_id,
+    directorId: each.director_id,
+    movieName: each.movie_name,
+    leadActor: each.lead_actor,
+  }
+}
+const convertdirectorObjectToResponseObject = dbObject => {
+  return {
     directorId: dbObject.director_id,
-    movieName: dbObject.movie_name,
-    leadActor: dbObject.lead_actor,
+    directorName: dbObject.director_name,
   }
 }
 
@@ -97,3 +103,34 @@ app.put('/movies/:movieId/', async (request, response) => {
 
   response.send('Movie Details Updated')
 })
+//API5
+
+app.delete('/movies/:movieId/', async (request, response) => {
+  const {movieId} = request.params
+  const deleteQuery = `
+  DELETE from movie WHERE 
+  movie_id=${movieId};`
+
+  await db.run(deleteQuery)
+  response.send('Movie Removed')
+})
+//API6
+app.get('/directors/', async (request, response) => {
+  const directorsListQuery = `
+  SELECT * FROM director;`
+  const directorsList = await db.all(directorsListQuery)
+  response.send(directorsList)
+})
+
+//API7
+app.get('/directors/:directorId/movies/', async (request, response) => {
+  const {directorId} = request.params
+  const gettingMovieNameQuery = `
+  SELECT movie_name FROM movie
+  WHERE director_id=${directorId};`
+
+  const movieNameArray = await db.all(gettingMovieNameQuery)
+  response.send(movieNameArray.map(each => ({movieName: each.movie_name})))
+})
+
+module.exports = app
